@@ -39,6 +39,14 @@ public class ParkingRateController {
 		return parkingRateService.getAllParkingRates();
 	}
 
+	// Public/customer-facing version - no admin-owned-property restriction.
+	// Used by the chatbot so a logged-in CUSTOMER can view rates.
+	@GetMapping("/public")
+	public List<ParkingRateResponse> getAllParkingRatesPublic() {
+
+		return parkingRateService.getAllParkingRatesPublic();
+	}
+
 	@GetMapping("/{rateId}")
 	public ParkingRateResponse getParkingRateById(@PathVariable Long rateId) {
 
