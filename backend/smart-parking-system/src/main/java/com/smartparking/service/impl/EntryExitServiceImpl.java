@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartparking.client.LoggingClient;
 import com.smartparking.dto.response.BookingResponse;
 import com.smartparking.entity.Booking;
 import com.smartparking.entity.ParkingProperty;
@@ -36,6 +37,7 @@ public class EntryExitServiceImpl implements EntryExitService {
 	private final UserRepository userRepository;
 	private final ParkingPropertyRepository propertyRepository;
 	private final ModelMapper modelMapper;
+	private final LoggingClient loggingClient;
 
 	@Override
 	public BookingResponse checkIn(Long bookingId) {
@@ -60,6 +62,11 @@ public class EntryExitServiceImpl implements EntryExitService {
 		parkingSlotRepository.save(slot);
 
 		Booking updatedBooking = bookingRepository.save(booking);
+
+		loggingClient.log("VEHICLE_CHECK_IN",
+				"Vehicle " + booking.getVehicle().getVehicleNumber() + " checked in on slot "
+						+ slot.getSlotNumber(),
+				booking.getUser().getEmail());
 
 		return mapToResponse(updatedBooking);
 	}
@@ -89,6 +96,11 @@ public class EntryExitServiceImpl implements EntryExitService {
 
 		Booking updatedBooking = bookingRepository.save(booking);
 
+		loggingClient.log("VEHICLE_CHECK_OUT",
+				"Vehicle " + booking.getVehicle().getVehicleNumber() + " checked out from slot "
+						+ slot.getSlotNumber() + ". Amount charged: " + booking.getTotalAmount(),
+				booking.getUser().getEmail());
+
 		return mapToResponse(updatedBooking);
 	}
 
@@ -101,7 +113,7 @@ public class EntryExitServiceImpl implements EntryExitService {
 	}
 
 	// Helper method
-	
+
 	private void validatePropertyAccess(User loggedInUser, Booking booking) {
 
 		String role = loggedInUser.getRole().getRoleName();
