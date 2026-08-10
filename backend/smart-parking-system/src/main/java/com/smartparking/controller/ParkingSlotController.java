@@ -20,37 +20,44 @@ import lombok.RequiredArgsConstructor;
 @SecurityRequirement(name = "bearerAuth")
 public class ParkingSlotController {
 
-	private final ParkingSlotService parkingSlotService;
+    private final ParkingSlotService parkingSlotService;
 
-	@GetMapping("/{slotId}")
-	public ParkingSlotResponse getSlotById(@PathVariable Long slotId) {
+    @GetMapping("/{slotId}")
+    public ParkingSlotResponse getSlotById(@PathVariable Long slotId) {
 
-		return parkingSlotService.getSlotById(slotId);
-	}
+        return parkingSlotService.getSlotById(slotId);
+    }
 
-	@GetMapping("/floor")
-	public List<ParkingSlotResponse> getSlotsByFloor(@RequestParam Long floorId) {
+    @GetMapping("/floor")
+    public List<ParkingSlotResponse> getSlotsByFloor(@RequestParam Long floorId) {
 
-		return parkingSlotService.getSlotsByFloor(floorId);
-	}
+        return parkingSlotService.getSlotsByFloor(floorId);
+    }
 
-	@GetMapping("/available")
-	public List<ParkingSlotResponse> getAvailableSlots() {
+    @GetMapping("/available")
+    public List<ParkingSlotResponse> getAvailableSlots() {
 
-		return parkingSlotService.getAvailableSlots();
-	}
-	
-	@GetMapping("/property/{propertyId}")
-	public List<ParkingSlotResponse> getSlotsByProperty(@PathVariable Long propertyId) {
+        return parkingSlotService.getAvailableSlots();
+    }
 
-	    return parkingSlotService.getSlotsByProperty(propertyId);
+    // Used by the chatbot so a logged-in CUSTOMER can check availability.
+    @GetMapping("/available/public")
+    public List<ParkingSlotResponse> getAvailableSlotsPublic() {
 
-	}
+        return parkingSlotService.getAvailableSlotsPublic();
+    }
 
-	@GetMapping("/available/property/{propertyId}")
-	public List<ParkingSlotResponse> getAvailableSlotsByProperty(@PathVariable Long propertyId) {
+    @GetMapping("/property/{propertyId}")
+    public List<ParkingSlotResponse> getSlotsByProperty(@PathVariable Long propertyId) {
 
-		return parkingSlotService.getAvailableSlotsByProperty(propertyId);
-	}
+        return parkingSlotService.getSlotsByProperty(propertyId);
+
+    }
+
+    @GetMapping("/available/property/{propertyId}")
+    public List<ParkingSlotResponse> getAvailableSlotsByProperty(@PathVariable Long propertyId) {
+
+        return parkingSlotService.getAvailableSlotsByProperty(propertyId);
+    }
 
 }
