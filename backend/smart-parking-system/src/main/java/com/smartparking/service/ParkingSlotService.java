@@ -11,6 +11,8 @@ public interface ParkingSlotService {
     List<ParkingSlotResponse> getSlotsByFloor(Long floorId);
 
     List<ParkingSlotResponse> getAvailableSlots();
+
+    List<ParkingSlotResponse> getAvailableSlotsPublic();
     
     List<ParkingSlotResponse> getAvailableSlotsByProperty(Long propertyId);
     
