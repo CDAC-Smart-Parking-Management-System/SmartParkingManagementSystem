@@ -1,0 +1,53 @@
+# ============================================================
+# Root .gitignore for the Smart Parking System project
+# Covers all 4 parts: Java/Maven backend, React frontend,
+# Python chatbot, .NET logging service.
+#
+# Put this ONE file at the very root of the repo (the same folder
+# that contains backend/, frontend/, chatbot-service/,
+# logging-service/) - not inside each sub-folder.
+# ============================================================
+
+# ---------- secrets - NEVER commit these ----------
+.env
+.env.local
+*.env
+
+# ---------- Java / Maven (backend/smart-parking-system) ----------
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---------- Node / React (frontend/smart-parking-frontend) ----------
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+
+# ---------- Python (chatbot-service) ----------
+venv/
+__pycache__/
+*.pyc
+
+# ---------- .NET (logging-service) ----------
+bin/
+obj/
+*.user
+
+# ---------- IDE / editor files ----------
+.vscode/
+.idea/
+.settings/
+.classpath
+.project
+*.iml
+
+# ---------- OS files ----------
+.DS_Store
+Thumbs.db
+
+# ---------- logs (created by start-all.ps1 / start-all.sh) ----------
+logs/
+*.log
