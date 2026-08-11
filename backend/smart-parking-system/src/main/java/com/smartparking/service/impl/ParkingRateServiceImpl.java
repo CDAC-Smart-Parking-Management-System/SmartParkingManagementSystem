@@ -79,6 +79,22 @@ public class ParkingRateServiceImpl implements ParkingRateService {
 				}).toList();
 		}
 
+	// Simple version with no admin/property restriction - just returns
+	// every parking rate in the whole system. Used by the chatbot and
+	// any other customer-facing screen where the caller is not an admin.
+	@Override
+	public List<ParkingRateResponse> getAllParkingRatesPublic() {
+
+		return parkingRateRepository.findAll()
+				.stream()
+				.map(rate -> {
+					ParkingRateResponse response = modelMapper.map(rate, ParkingRateResponse.class);
+					response.setPropertyId(rate.getParkingProperty().getPropertyId());
+					response.setPropertyName(rate.getParkingProperty().getPropertyName());
+					return response;
+				}).toList();
+	}
+
 	@Override
 	public ParkingRateResponse getParkingRateById(Long rateId) {
 

@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.smartparking.client.LoggingClient;
 import com.smartparking.dto.request.BookingRequest;
 import com.smartparking.dto.response.BookingResponse;
 import com.smartparking.entity.Booking;
@@ -42,6 +44,7 @@ public class BookingServiceImpl implements BookingService {
 	private final ParkingRateRepository parkingRateRepository;
 	private final UserRepository userRepository;
 	private final ModelMapper modelMapper;
+	private final LoggingClient loggingClient;
 
 	@Override
 	public BookingResponse bookSlot(BookingRequest request) {
@@ -68,6 +71,11 @@ public class BookingServiceImpl implements BookingService {
 			throw new BadRequestException("Parking Slot is already booked");
 		}
 
+		// Only two check-in windows are allowed: 15 minutes or 30 minutes.
+		if (request.getArrivalMinutes() != 15 && request.getArrivalMinutes() != 30) {
+			throw new BadRequestException("Check-in time must be either 15 or 30 minutes");
+		}
+
 		Booking booking = new Booking();
 
 		ParkingRate parkingRate = parkingRateRepository
@@ -77,6 +85,7 @@ public class BookingServiceImpl implements BookingService {
 
 		booking.setBookingNumber("BK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 		booking.setBookingTime(LocalDateTime.now());
+		booking.setExpectedCheckInTime(LocalDateTime.now().plusMinutes(request.getArrivalMinutes()));
 		booking.setTotalAmount(parkingRate.getPrice());
 		booking.setBookingStatus(BookingStatus.BOOKED);
 		booking.setPaymentStatus(PaymentStatus.PENDING);
@@ -88,6 +97,11 @@ public class BookingServiceImpl implements BookingService {
 		parkingSlotRepository.save(slot);
 
 		Booking savedBooking = bookingRepository.save(booking);
+
+		loggingClient.log("BOOKING_CREATED",
+				"Booking " + savedBooking.getBookingNumber() + " created for slot " + slot.getSlotNumber()
+						+ " with a " + request.getArrivalMinutes() + " minute check-in window",
+				user.getEmail());
 
 		return mapToResponse(savedBooking);
 	}
@@ -180,7 +194,41 @@ public class BookingServiceImpl implements BookingService {
 
 		Booking updatedBooking = bookingRepository.save(booking);
 
+		loggingClient.log("BOOKING_CANCELLED",
+				"Booking " + updatedBooking.getBookingNumber() + " was cancelled by the customer", user.getEmail());
+
 		return mapToResponse(updatedBooking);
+	}
+
+	// Runs every 1 minute and cancels bookings where the customer never
+	// checked in within the 15/30 minute window they chose while booking
+	// (a "no-show"), so the slot does not stay reserved forever and goes
+	// back to AVAILABLE for other customers.
+	@Scheduled(fixedRate = 60 * 1000)
+	public void releaseNoShowBookings() {
+
+		List<Booking> bookedList = bookingRepository.findByBookingStatus(BookingStatus.BOOKED);
+
+		LocalDateTime now = LocalDateTime.now();
+
+		for (Booking booking : bookedList) {
+
+			if (booking.getExpectedCheckInTime() != null && now.isAfter(booking.getExpectedCheckInTime())) {
+
+				booking.setBookingStatus(BookingStatus.CANCELLED);
+
+				ParkingSlot slot = booking.getParkingSlot();
+				slot.setSlotStatus(SlotStatus.AVAILABLE);
+				parkingSlotRepository.save(slot);
+
+				bookingRepository.save(booking);
+
+				loggingClient.log("BOOKING_AUTO_EXPIRED",
+						"Booking " + booking.getBookingNumber() + " auto-cancelled - vehicle did not check-in on slot "
+								+ slot.getSlotNumber() + " in time. Slot released back to AVAILABLE",
+						booking.getUser().getEmail());
+			}
+		}
 	}
 
 	private User getLoggedInUser() {
