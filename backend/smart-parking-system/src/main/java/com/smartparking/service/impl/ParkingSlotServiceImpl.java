@@ -83,6 +83,19 @@ public class ParkingSlotServiceImpl implements ParkingSlotService {
 				.collect(Collectors.toList());
 	}
 
+	// Simple version with no admin/property restriction - just returns
+	// every AVAILABLE slot in the whole system. Used by the chatbot and
+	// any other customer-facing screen where the caller is not an admin.
+	@Override
+	@Transactional(readOnly = true)
+	public List<ParkingSlotResponse> getAvailableSlotsPublic() {
+
+		return parkingSlotRepository.findAll().stream()
+				.filter(slot -> slot.getSlotStatus() == SlotStatus.AVAILABLE)
+				.map(this::mapToResponse)
+				.collect(Collectors.toList());
+	}
+
 	// not used now - changed with below method
 	@Override
 	@Transactional(readOnly = true)
