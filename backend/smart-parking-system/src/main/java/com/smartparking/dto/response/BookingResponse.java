@@ -27,6 +27,10 @@ public class BookingResponse {
 
     private LocalDateTime checkOutTime;
 
+    // deadline the customer must check-in by, so the frontend can show
+    // "Check-in by <time>" while the booking is still just BOOKED
+    private LocalDateTime expectedCheckInTime;
+
     private BigDecimal totalAmount;
 
     private BookingStatus bookingStatus;
