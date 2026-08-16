@@ -50,6 +50,12 @@ public class Booking {
     @Column(name = "check_out_time")
     private LocalDateTime checkOutTime;
 
+    // The deadline the customer must check-in by (booking_time + 15 or 30
+    // minutes, whichever they chose). A background job checks this and
+    // auto-cancels the booking if the deadline passes with no check-in.
+    @Column(name = "expected_check_in_time")
+    private LocalDateTime expectedCheckInTime;
+
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
