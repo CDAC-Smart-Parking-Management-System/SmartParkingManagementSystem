@@ -16,8 +16,13 @@ function MyBookings() {
 
         loadBookings();
 
-    }, []);
+        const interval = setInterval(() => {
+            loadBookings();
+        }, 60000);
 
+        return () => clearInterval(interval);
+
+    }, []);
 
     async function loadBookings() {
 

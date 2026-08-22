@@ -17,6 +17,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -26,7 +27,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "bookings")
+@Table(
+    name = "bookings",
+    indexes = {
+        @Index(
+            name = "idx_booking_status_checkin",
+            columnList = "booking_status, expected_check_in_time"
+        )
+    }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -50,9 +59,8 @@ public class Booking {
     @Column(name = "check_out_time")
     private LocalDateTime checkOutTime;
 
-    // The deadline the customer must check-in by (booking_time + 15 or 30
-    // minutes, whichever they chose). A background job checks this and
-    // auto-cancels the booking if the deadline passes with no check-in.
+    // Customer must check-in before this time.
+    // Scheduler automatically cancels the booking if this time passes.
     @Column(name = "expected_check_in_time")
     private LocalDateTime expectedCheckInTime;
 
@@ -86,5 +94,4 @@ public class Booking {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "slot_id", nullable = false)
     private ParkingSlot parkingSlot;
-
 }

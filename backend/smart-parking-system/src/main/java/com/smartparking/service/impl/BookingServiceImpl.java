@@ -205,30 +205,36 @@ public class BookingServiceImpl implements BookingService {
 	// (a "no-show"), so the slot does not stay reserved forever and goes
 	// back to AVAILABLE for other customers.
 	@Scheduled(fixedRate = 60 * 1000)
+	@Transactional
 	public void releaseNoShowBookings() {
 
-		List<Booking> bookedList = bookingRepository.findByBookingStatus(BookingStatus.BOOKED);
+	    LocalDateTime now = LocalDateTime.now();
 
-		LocalDateTime now = LocalDateTime.now();
+	    List<Booking> bookings =
+	            bookingRepository.findExpiredBookings(
+	                    BookingStatus.BOOKED,
+	                    now
+	            );
 
-		for (Booking booking : bookedList) {
+	    for (Booking booking : bookings) {
 
-			if (booking.getExpectedCheckInTime() != null && now.isAfter(booking.getExpectedCheckInTime())) {
+	        booking.setBookingStatus(BookingStatus.CANCELLED);
 
-				booking.setBookingStatus(BookingStatus.CANCELLED);
+	        ParkingSlot slot = booking.getParkingSlot();
 
-				ParkingSlot slot = booking.getParkingSlot();
-				slot.setSlotStatus(SlotStatus.AVAILABLE);
-				parkingSlotRepository.save(slot);
+	        if (slot != null) {
+	            slot.setSlotStatus(SlotStatus.AVAILABLE);
+	        }
 
-				bookingRepository.save(booking);
-
-				loggingClient.log("BOOKING_AUTO_EXPIRED",
-						"Booking " + booking.getBookingNumber() + " auto-cancelled - vehicle did not check-in on slot "
-								+ slot.getSlotNumber() + " in time. Slot released back to AVAILABLE",
-						booking.getUser().getEmail());
-			}
-		}
+	        loggingClient.log(
+	                "BOOKING_AUTO_EXPIRED",
+	                "Booking " + booking.getBookingNumber()
+	                        + " auto-cancelled - vehicle did not check-in on time. "
+	                        + "Slot " + slot.getSlotNumber()
+	                        + " released.",
+	                booking.getUser().getEmail()
+	        );
+	    }
 	}
 
 	private User getLoggedInUser() {
