@@ -58,8 +58,8 @@ public class BookingServiceImpl implements BookingService {
 			throw new BadRequestException("Vehicle does not belong to the logged-in user");
 		}
 
-		ParkingSlot slot = parkingSlotRepository.findById(request.getSlotId())
-				.orElseThrow(() -> new ResourceNotFoundException("Parking Slot not found"));
+		ParkingSlot slot = parkingSlotRepository.findBySlotId(request.getSlotId())
+		        .orElseThrow(() -> new ResourceNotFoundException("Parking Slot not found"));
 
 		if (slot.getSlotStatus() != SlotStatus.AVAILABLE) {
 			throw new BadRequestException("Parking Slot is not available");
